@@ -21,6 +21,103 @@
 namespace crypto
 {
 
+void DeriveNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt)
+{   
+    const int N_NAS_enc_alg = 0x01;
+    const int N_NAS_int_alg = 0x02;
+    OctetString s1[2];
+    s1[0] = OctetString::FromOctet(N_NAS_enc_alg);
+    s1[1] = OctetString::FromOctet((int)ciphering);
+
+    OctetString s2[2];
+    s2[0] = OctetString::FromOctet(N_NAS_int_alg);
+    s2[1] = OctetString::FromOctet((int)integrity);
+
+    OctetString o_kamf = OctetString::FromArray((const uint8_t *)k_amf, kamf_len);
+    auto kdfEnc = crypto::CalculateKdfKey(o_kamf, 0x69, s1, 2);
+    auto kdfInt = crypto::CalculateKdfKey(o_kamf, 0x69, s2, 2);
+
+    OctetString keys_kNasEnc = kdfEnc.subCopy(16, 16);
+    OctetString keys_kNasInt = kdfInt.subCopy(16, 16); 
+    std::memcpy(kNasEnc, keys_kNasEnc.data(), keys_kNasEnc.length());
+    std::memcpy(kNasInt, keys_kNasInt.data(), keys_kNasInt.length());
+}
+
+void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf)
+{
+    OctetString kSeaf{};
+    OctetString kAmf{};
+    std::string s_snn;
+    std::string s_supi(supi);
+    std::string s_abba(abba) ;
+
+    s_snn.assign(snn, snn_len);
+
+    OctetString kAusf = OctetString::FromArray((const uint8_t *)kausf, ausf_len);
+    OctetString s1[1];
+    s1[0] = crypto::EncodeKdfString(s_snn);
+
+    OctetString s2[2];
+    s2[0] = crypto::EncodeKdfString(s_supi);
+
+    for (uint32_t i = 0; i < abba_len; i ++)
+    {
+        s2[1].appendOctet(abba[i]);
+    }
+
+    kSeaf = crypto::CalculateKdfKey(kAusf, 0x6C, s1, 1);
+    kAmf = crypto::CalculateKdfKey(kSeaf, 0x6D, s2, 2);
+
+    memcpy(k_seaf, kSeaf.data(), kSeaf.length());
+    memcpy(k_amf, kAmf.data(), kAmf.length());
+}
+
+uint32_t ComputeMacEia2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char *pData, uint32_t length)
+{
+    OctetString key = OctetString{std::vector<uint8_t>{pKey, pKey+key_len }};
+    OctetString message = OctetString{std::vector<uint8_t>{pData, pData+length }};
+    return eia2::Compute(count, bearer, direction, message, key);
+}
+
+void DecryptEea1(signed char *pKey, uint32_t key_len, uint32_t count, uint32_t bearer, uint32_t dir, signed char * pData, uint32_t length)
+{
+    EncryptUea2((const uint8_t *)pKey, count, bearer, dir, (uint8_t *)pData, length);
+}
+
+uint32_t ComputeMacEia3(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length)
+{
+    return eea3::EIA3((const uint8_t *)pKey, count, direction, bearer, length * 8,
+                      reinterpret_cast<const uint32_t *>(pData));
+}
+
+void EncryptEea2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length)
+{
+    OctetString key = OctetString::FromArray((const uint8_t *)pKey, key_len);
+    OctetString message= OctetString::FromArray((const uint8_t *)pData, length);
+
+    eea2::Encrypt(count, bearer, direction, message, key);
+}
+
+void DecryptEea2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length)
+{
+    OctetString key = OctetString::FromArray((const uint8_t *)pKey, key_len);
+    OctetString message= OctetString::FromArray((const uint8_t *)pData, length);
+    
+    eea2::Decrypt(count, bearer, direction, message, key);
+}
+
+void EncryptEea3(signed char *pKey,uint32_t count, int bearer, int direction, signed char * pData, uint32_t length)
+{
+    eea3::EEA3((const uint8_t *)pKey, count, bearer, direction, length * 8,
+               reinterpret_cast<uint32_t *>(pData));
+}
+
+void DecryptEea3(signed char *pKey, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length)
+{
+    eea3::EEA3((const uint8_t *)pKey, count, bearer, direction, length * 8,
+               reinterpret_cast<uint32_t *>(pData));
+}
+
 void DeriveNasKeysC(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt)
 {   
     const int N_NAS_enc_alg = 0x01;

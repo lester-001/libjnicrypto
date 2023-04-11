@@ -12,6 +12,23 @@
 
 namespace crypto
 {
+void DeriveNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
+
+void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf);
+
+uint32_t ComputeMacEia2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char *pData, uint32_t length);
+
+void DecryptEea1(signed char *pKey, uint32_t key_len, uint32_t count, uint32_t bearer, uint32_t dir, signed char * pData, uint32_t length);
+
+uint32_t ComputeMacEia3(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length);
+
+void EncryptEea2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length);
+
+void DecryptEea2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length);
+
+void EncryptEea3(signed char *pKey,uint32_t count, int bearer, int direction, signed char * pData, uint32_t length);
+
+void DecryptEea3(signed char *pKey, uint32_t count, int bearer, int direction, signed char * pData, uint32_t length);
 
 /* KDF and MAC etc. */
 OctetString CalculatePrfPrime(const OctetString &key, const OctetString &input, int outputLength);

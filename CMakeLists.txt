@@ -14,4 +14,7 @@ include_directories(src)
 
 #################### SUB DIRECTORIES ####################
 
+add_subdirectory(src/ext)
+add_subdirectory(src/utils)
+add_subdirectory(src/lib)
 add_subdirectory(src)

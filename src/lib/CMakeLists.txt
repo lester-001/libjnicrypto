@@ -5,7 +5,8 @@ file(GLOB_RECURSE SRC_FILES *.cpp)
  
 add_library(common-lib ${HDR_FILES} ${SRC_FILES}) 
  
-target_compile_options(common-lib PRIVATE -Wall -Wextra -pedantic -Wno-unused-parameter) 
- 
+target_compile_options(common-lib PRIVATE -Wall -Wextra -pedantic -Wno-unused-parameter -fPIC) 
+
+target_link_libraries(common-lib crypt)  
 target_link_libraries(common-lib utils) 
  

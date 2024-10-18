@@ -13,6 +13,7 @@
 namespace crypto
 {
 void DeriveNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
+void DeriveEpsNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 
 void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf);
 

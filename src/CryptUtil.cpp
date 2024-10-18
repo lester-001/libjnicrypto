@@ -51,6 +51,23 @@ JNIEXPORT void JNICALL Java_com_ailink_jni_CryptUtil_DeriveNasKeys(JNIEnv *env, 
         env->ReleaseByteArrayElements(jkamf, (jbyte*)kamf,JNI_ABORT);
 }
 
+JNIEXPORT void JNICALL Java_com_ailink_jni_CryptUtil_DeriveEpsNasKeys(JNIEnv *env, jobject obj, jbyteArray jkamf, jbyteArray jkNasEnc, jbyteArray jkNasInt, jint ciphering, jint integrity) {
+
+        void *kamf = (void*)env->GetByteArrayElements(jkamf,NULL);
+
+        uint32_t kamf_len = env->GetArrayLength(jkamf);
+
+        uint8_t kNasEnc[16];
+        uint8_t kNasInt[16];
+
+        DeriveEpsNasKeysC((uint32_t)ciphering, (uint32_t)integrity, (const char *)kamf, (uint32_t)kamf_len, kNasEnc, kNasInt);
+        
+	env->SetByteArrayRegion(jkNasEnc, 0, 16, (jbyte*)kNasEnc);
+	env->SetByteArrayRegion(jkNasInt, 0, 16, (jbyte*)kNasInt);
+
+        env->ReleaseByteArrayElements(jkamf, (jbyte*)kamf,JNI_ABORT);
+}
+
 JNIEXPORT jint JNICALL Java_com_ailink_jni_CryptUtil_ComputeMacUia2(JNIEnv *env, jobject obj, jbyteArray jkey, jint jcount, jint jfresh, 
                 jint jdir, jbyteArray jdata) {
         void *key = (void*)env->GetByteArrayElements(jkey,NULL);

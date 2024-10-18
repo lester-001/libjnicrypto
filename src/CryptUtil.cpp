@@ -6,7 +6,6 @@
 #include <lib/crypt/crypt.hpp>
 #include <utils/octet_string.hpp>
 #include <cstring>
-#include "crypt.hpp"
 
 using namespace crypto;
 

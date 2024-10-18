@@ -162,6 +162,29 @@ void DeriveNasKeysC(uint32_t ciphering, uint32_t integrity, const char *k_amf, u
     std::memcpy(kNasInt, keys_kNasInt.data(), keys_kNasInt.length());
 }
 
+
+void DeriveEpsNasKeysC(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt)
+{   
+    const int N_NAS_enc_alg = 0x01;
+    const int N_NAS_int_alg = 0x02;
+    OctetString s1[2];
+    s1[0] = OctetString::FromOctet(N_NAS_enc_alg);
+    s1[1] = OctetString::FromOctet((int)ciphering);
+
+    OctetString s2[2];
+    s2[0] = OctetString::FromOctet(N_NAS_int_alg);
+    s2[1] = OctetString::FromOctet((int)integrity);
+
+    OctetString o_kamf = OctetString::FromArray((const uint8_t *)k_amf, kamf_len);
+    auto kdfEnc = crypto::CalculateKdfKey(o_kamf, 0x15, s1, 2);
+    auto kdfInt = crypto::CalculateKdfKey(o_kamf, 0x15, s2, 2);
+
+    OctetString keys_kNasEnc = kdfEnc.subCopy(16, 16);
+    OctetString keys_kNasInt = kdfInt.subCopy(16, 16); 
+    std::memcpy(kNasEnc, keys_kNasEnc.data(), keys_kNasEnc.length());
+    std::memcpy(kNasInt, keys_kNasInt.data(), keys_kNasInt.length());
+}
+
 OctetString CalculatePrfPrime(const OctetString &key, const OctetString &input, int outputLength)
 {
     if (key.length() != 32)

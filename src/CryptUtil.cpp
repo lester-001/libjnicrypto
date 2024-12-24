@@ -16,7 +16,7 @@ JNIEXPORT void JNICALL Java_com_ailink_jni_CryptUtil_DeriveKeysSeafAmf(JNIEnv *e
         void *abba = (void*)env->GetByteArrayElements(jabba,NULL);
         void *kAusf = (void*)env->GetByteArrayElements(jkAusf,NULL);
 
-//        uint32_t supi_len = env->GetArrayLength(jsupi);
+        uint32_t supi_len = env->GetArrayLength(jsupi);
         uint32_t abba_len = env->GetArrayLength(jabba);
         uint32_t kAusf_len = env->GetArrayLength(jkAusf);
         uint32_t snn_len = env->GetArrayLength(jsnn);
@@ -24,7 +24,7 @@ JNIEXPORT void JNICALL Java_com_ailink_jni_CryptUtil_DeriveKeysSeafAmf(JNIEnv *e
         uint32_t kseaf[32];
         uint32_t kamf[32];
 
-        DeriveKeysSeafAmf((const char *)kAusf, kAusf_len, (const char *)supi, (const char *)snn, snn_len, (char *)abba, abba_len, (char *)kseaf, (char *)kamf);
+        DeriveKeysSeafAmf((const char *)kAusf, kAusf_len, (const char *)supi, supi_len, (const char *)snn, snn_len, (char *)abba, abba_len, (char *)kseaf, (char *)kamf);
 
 	env->SetByteArrayRegion(jkseaf, 0, 32, (jbyte*)kseaf);
 	env->SetByteArrayRegion(jkamf, 0, 32, (jbyte*)kamf);

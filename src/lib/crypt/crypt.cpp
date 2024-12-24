@@ -65,15 +65,18 @@ void DeriveEpsNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf,
     std::memcpy(kNasInt, keys_kNasInt.data(), keys_kNasInt.length());
 }
 
-void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf)
+void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, uint32_t supi_len, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf)
 {
     OctetString kSeaf{};
     OctetString kAmf{};
     std::string s_snn;
-    std::string s_supi(supi);
-    std::string s_abba(abba) ;
+    std::string s_supi;
+    std::string s_abba ;
 
+    s_supi.assign(supi, supi_len);
+    s_abba.assign(abba, abba_len);
     s_snn.assign(snn, snn_len);
+
 
     OctetString kAusf = OctetString::FromArray((const uint8_t *)kausf, ausf_len);
     OctetString s1[1];
@@ -401,14 +404,16 @@ uint32_t ComputeMacEia3(uint32_t count, int bearer, int direction, const OctetSt
 }
 
 
-void DeriveKeysSeafAmf_c(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf)
+void DeriveKeysSeafAmf_c(const char *kausf, int ausf_len, const char *supi, uint32_t supi_len, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf)
 {
     OctetString kSeaf{};
     OctetString kAmf{};
     std::string s_snn;
-    std::string s_supi(supi);
-    std::string s_abba(abba) ;
+    std::string s_supi;
+    std::string s_abba ;
 
+    s_supi.assign(supi, supi_len);
+    s_abba.assign(abba, abba_len);
     s_snn.assign(snn, snn_len);
 
     OctetString kAusf = OctetString::FromArray((const uint8_t *)kausf, ausf_len);

@@ -15,7 +15,7 @@ namespace crypto
 void DeriveNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 void DeriveEpsNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 
-void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf);
+void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, uint32_t supi_len, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf);
 
 uint32_t ComputeMacEia2(signed char *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char *pData, uint32_t length);
 
@@ -54,7 +54,7 @@ void EncryptUea2(const uint8_t *pKey, uint32_t count, uint32_t bearer, uint32_t 
 
 uint32_t ComputeMacEia2_c(signed char * *pKey, uint32_t key_len, uint32_t count, int bearer, int direction, signed char *pData, uint32_t length);
 
-void DeriveKeysSeafAmf_c(const char *kausf, int ausf_len, const char *supi, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf);
+void DeriveKeysSeafAmf_c(const char *kausf, int ausf_len, const char *supi, uint32_t supi_len, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf);
 void DeriveNasKeysC(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 void DeriveEpsNasKeysC(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 

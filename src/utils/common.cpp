@@ -177,13 +177,14 @@ TimeStamp utils::CurrentTimeStamp()
 
 OctetString utils::IpToOctetString(const std::string &address)
 {
-    int ipVersion = GetIpVersion(address);
+    int ipVersion = GetIpVersion(address.c_str());
+    
     if (ipVersion == 4)
     {
         int bytes[4];
         char dot;
 
-        std::stringstream ss(address);
+        std::stringstream ss(address.c_str());
         ss >> bytes[0] >> dot >> bytes[1] >> dot >> bytes[2] >> dot >> bytes[3] >> dot;
 
         std::vector<uint8_t> data(4);

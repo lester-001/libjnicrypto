@@ -12,6 +12,7 @@ build: FORCE
 	cmake --build cmake-build-release --target all
 	
 	cp cmake-build-release/src/libjnicrypto.so build/
+	cp cmake-build-release/src/libjnigtpproxy.so build/
 
 	@printf "${GREEN}UERANSIM successfully built.${NC}\n"
 

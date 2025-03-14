@@ -14,3 +14,13 @@ target_compile_options(jnicrypto PRIVATE -Wall -Wextra -pedantic -Wno-unused-par
 
 target_link_libraries(jnicrypto common-lib)
 target_link_libraries(jnicrypto utils)
+
+
+
+file(GLOB_RECURSE GTP_SRC_FILES gtpproxy.cpp)
+add_library(jnigtpproxy SHARED ${HDR_FILES} ${GTP_SRC_FILES})
+target_compile_options(jnigtpproxy PRIVATE -Wall -Wextra -pedantic -Wno-unused-parameter) 
+
+target_link_libraries(jnigtpproxy common-lib)
+target_link_libraries(jnigtpproxy utils)
+

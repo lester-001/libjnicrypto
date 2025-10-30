@@ -21,6 +21,50 @@
 namespace crypto
 {
 
+OctetString CalculateResStar(const OctetString &key, const OctetString &snn, const OctetString &rand,
+                             const OctetString &res)
+{
+    OctetString params[3];
+    params[0] = snn.copy();
+    params[1] = rand.copy();
+    params[2] = res.copy();
+
+    auto output = crypto::CalculateKdfKey(key, 0x6B, params, 3);
+
+    // The (X)RES* is identified with the 128 least significant bits of the output of the KDF.
+    return output.subCopy(output.length() - 16);
+}
+void DeriveKeysSeafAmf(const OctetString &supi, const OctetString &snn, 
+    const OctetString &kausf, const OctetString &abba, OctetString &kseaf, OctetString &kamf)
+{
+    OctetString s1[1];
+    s1[0] = snn.copy();
+    OctetString s2[2];
+    s2[0] = supi.copy();
+    s2[1] = abba.copy();
+
+    kseaf = crypto::CalculateKdfKey(kausf, 0x6C, s1, 1);
+    kamf = crypto::CalculateKdfKey(kseaf, 0x6D, s2, 2);
+}
+OctetString CalculateKAusfFor4gAka(const OctetString &ck, const OctetString &ik, const OctetString &snn,
+                                   const OctetString &sqnXorAk)
+{
+    OctetString key = OctetString::Concat(ck, ik);
+    OctetString s[2];
+    s[0] = snn.copy();
+    s[1] = sqnXorAk.copy();
+    return crypto::CalculateKdfKey(key, 0x10, s, 2);
+}
+OctetString CalculateKAusfFor5gAka(const OctetString &ck, const OctetString &ik, const OctetString &snn,
+                                   const OctetString &sqnXorAk)
+{
+    OctetString key = OctetString::Concat(ck, ik);
+    OctetString s[2];
+    s[0] = snn.copy();
+    s[1] = sqnXorAk.copy();
+    return crypto::CalculateKdfKey(key, 0x6A, s, 2);
+}
+
 void DeriveNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt)
 {   
     const int N_NAS_enc_alg = 0x01;
@@ -65,6 +109,8 @@ void DeriveEpsNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf,
     std::memcpy(kNasInt, keys_kNasInt.data(), keys_kNasInt.length());
 }
 
+
+
 void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, uint32_t supi_len, const char *snn, uint32_t snn_len, const char *abba, uint32_t abba_len, char *k_seaf, char *k_amf)
 {
     OctetString kSeaf{};
@@ -76,7 +122,6 @@ void DeriveKeysSeafAmf(const char *kausf, int ausf_len, const char *supi, uint32
     s_supi.assign(supi, supi_len);
     s_abba.assign(abba, abba_len);
     s_snn.assign(snn, snn_len);
-
 
     OctetString kAusf = OctetString::FromArray((const uint8_t *)kausf, ausf_len);
     OctetString s1[1];

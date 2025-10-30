@@ -14,6 +14,7 @@ namespace gtp
 {
 
 class GtpTask;
+class SipProxyTask;
 
 struct GtpTunnel
 {
@@ -41,10 +42,11 @@ struct GtpUeContextUpdate
 {
     bool isCreate{};
     int ueId{};
+    void *msgQueue{};
     AggregateMaximumBitRate ueAmbr{};
 
-    GtpUeContextUpdate(bool isCreate, int ueId, const AggregateMaximumBitRate &ueAmbr)
-        : isCreate(isCreate), ueId(ueId), ueAmbr(ueAmbr)
+    GtpUeContextUpdate(bool isCreate, int ueId, const AggregateMaximumBitRate &ueAmbr, void *queue)
+        : isCreate(isCreate), ueId(ueId), msgQueue(queue), ueAmbr(ueAmbr)
     {
     }
 };
@@ -69,6 +71,7 @@ struct GtpConfig
     int gnbid;
     std::string name{};
     std::string gtpIp{};
+    std::string sipIp{};
 };
 
 struct TaskBase

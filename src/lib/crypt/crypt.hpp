@@ -12,6 +12,18 @@
 
 namespace crypto
 {
+
+OctetString CalculateResStar(const OctetString &key, const OctetString &snn, const OctetString &rand,
+                             const OctetString &res);
+                             
+void DeriveKeysSeafAmf(const OctetString &supi, const OctetString &snn, 
+    const OctetString &kausf, const OctetString &abba, OctetString &kseaf, OctetString &kAmf);
+OctetString CalculateKAusfFor4gAka(const OctetString &ck, const OctetString &ik, const OctetString &snn,
+                                   const OctetString &sqnXorAk);
+
+
+OctetString CalculateKAusfFor5gAka(const OctetString &ck, const OctetString &ik, const OctetString &snn,
+                                   const OctetString &sqnXorAk);
 void DeriveNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 void DeriveEpsNasKeys(uint32_t ciphering, uint32_t integrity, const char *k_amf, uint32_t kamf_len, uint8_t *kNasEnc, uint8_t *kNasInt);
 

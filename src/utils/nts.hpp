@@ -58,6 +58,9 @@ enum class NtsMessageType
     UE_RLS_TO_RLS,
 	UE_NAS_TO_APP,
 	UE_NAS_TO_RLS,
+
+  GTP_PAYLOAD,
+  SIP_CONTEXT,
 };
 
 struct NtsMessage

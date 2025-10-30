@@ -12,8 +12,11 @@
 #include <utils/logger.hpp>
 #include <utils/nts.hpp>
 
+uint16_t calculate_checksum(const uint8_t* header, size_t len);
+
 namespace gtp
 {
+  class GtpProxy;
 
 struct NmGnbNgapToGtp : NtsMessage
 {
@@ -23,6 +26,7 @@ struct NmGnbNgapToGtp : NtsMessage
         UE_CONTEXT_RELEASE,
         SESSION_CREATE,
         SESSION_RELEASE,
+        DATA_PDU_DELIVERY,
     } present;
 
     // UE_CONTEXT_UPDATE
@@ -38,24 +42,22 @@ struct NmGnbNgapToGtp : NtsMessage
     // SESSION_RELEASE
     int psi{};
 
+    OctetString data;
     explicit NmGnbNgapToGtp(PR present) : NtsMessage(NtsMessageType::GNB_NGAP_TO_GTP), present(present)
     {
     }
 };
 
-struct NmGnbRlsToGtp : NtsMessage
+struct NmGtpPayload : NtsMessage
 {
     enum PR
     {
         DATA_PDU_DELIVERY,
     } present;
 
-    // DATA_PDU_DELIVERY
-    int ueId{};
-    int psi{};
-    OctetString pdu;
+    OctetString data;
 
-    explicit NmGnbRlsToGtp(PR present) : NtsMessage(NtsMessageType::GNB_RLS_TO_GTP), present(present)
+    explicit NmGtpPayload(PR present) : NtsMessage(NtsMessageType::GTP_PAYLOAD), present(present)
     {
     }
 };
@@ -64,6 +66,8 @@ class GtpTask : public NtsTask
 {
   private:
     TaskBase *m_base;
+    GtpProxy *m_gtpproxy;
+
     std::unique_ptr<Logger> m_logger;
 
     udp::UdpServerTask *m_udpServer;
@@ -72,10 +76,12 @@ class GtpTask : public NtsTask
     std::unordered_map<uint64_t, std::unique_ptr<PduSessionResource>> m_pduSessions;
     PduSessionTree m_sessionTree;
     
+    OctetString *m_last_packet;
+
     friend class GnbCmdHandler;
 
   public:
-    explicit GtpTask(TaskBase *base);
+    explicit GtpTask(TaskBase *base, GtpProxy *proxy);
     ~GtpTask() override = default;
 
   protected:
@@ -94,8 +100,7 @@ class GtpTask : public NtsTask
 
     void updateAmbrForUe(int ueId);
     void updateAmbrForSession(uint64_t pduSession);
-
-
 };
+
 
 } // namespace nr::gnb

@@ -23,6 +23,7 @@ struct cons
 
     // Some port values
     static constexpr const uint16_t GtpPort = 2152;
+    static constexpr const uint16_t SipPort = 5060;
     static constexpr const uint16_t RadioLinkPort = 4997;
 
     // TUN interface

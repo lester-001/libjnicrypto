@@ -39,7 +39,14 @@ JNIEXPORT void JNICALL Java_com_ailink_jni_CryptUtil_EncryptEea3(JNIEnv *env, jo
 JNIEXPORT void JNICALL Java_com_ailink_jni_CryptUtil_DecryptEea3(JNIEnv *env, jobject obj, jbyteArray jkey, jint jcount, jint jfresh, 
                 jint jdir, jbyteArray jdata);
 
-
+JNIEXPORT int JNICALL Java_com_ailink_jni_CryptUtil_Handle4gAuthentication(JNIEnv *env, jobject obj, 
+        jint op_type, jbyteArray jopc, jbyteArray jkey, 
+        jbyteArray jrand, jbyteArray jautn, jbyteArray jplmn, 
+        jbyteArray jkasme, jbyteArray jres);
+JNIEXPORT int JNICALL Java_com_ailink_jni_CryptUtil_Handle5gAuthentication(JNIEnv *env, jobject obj, 
+        jint op_type, jbyteArray jopc, jbyteArray jkey, jbyteArray jsupi, 
+        jbyteArray jrand, jbyteArray jautn, jbyteArray jsnn, jbyteArray jabba, 
+        jbyteArray jkseaf, jbyteArray jkamf, jbyteArray jres);
 #ifdef __cplusplus
 }
 #endif

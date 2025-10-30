@@ -2,6 +2,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "task.hpp"
 #include <unordered_map>
 
 #include <lib/app/cli_cmd.hpp>
@@ -9,15 +10,37 @@
 #include <utils/logger.hpp>
 #include <utils/network.hpp>
 #include <utils/nts.hpp>
+#include <shared_mutex>
 
 namespace gtp
 {
+
+struct SipContext
+{
+    int ueid;
+    OctetString ueip{};
+    OctetString imsip{};
+};
 
 class GtpProxy
 {
   private:
     TaskBase *taskBase;
 
+
+    typedef std::deque<NmGtpPayload *> GtpPayloadQueue;
+    typedef struct GtpPayloadQueueEntry
+    {
+        GtpPayloadQueue *queue;
+        std::shared_mutex rw_mutex;
+    } GtpPayloadQueueEntry;
+    
+    std::mutex mutex{};
+    std::unordered_map<int, GtpPayloadQueueEntry *> uemsgQueue;
+
+    std::shared_mutex rw_mutex;
+    
+    std::unordered_map<int, SipContext *> ueSipContext;
   public:
     GtpProxy(GtpConfig config, app::INodeListener *nodeListener, NtsTask *cliCallbackTask);
     virtual ~GtpProxy();
@@ -26,6 +49,16 @@ class GtpProxy
     void start();
     void addUeContext(int ueid, long dlAmbr, long ulAmbr);
     void addSession(int ueid, int psi, int qfi, int local_teid, int remote_teid, std::string &remoteip, long dlAmbr, long ulAmbr);
+
+    void addSipContext(int ueid, std::string &ueip, std::string &imsip);
+
+    void sendUeData(int ueid, int psi, uint8_t *buffer, size_t size);
+    int recvUeData(int ueid, uint8_t *buffer);
+    int recvUeDataSize(int ueid);
+
+    void sendSipMsg(int ueid, int psi, int proto, uint8_t *buffer, size_t size);
+
+    void addGtpPayload(int ueid, OctetString &payload);
 };
 
 

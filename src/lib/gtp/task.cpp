@@ -13,6 +13,7 @@
 #include <iostream> // 必须包含的头文件
 
 #include "task.hpp"
+#include "gtp.hpp"
 
 #include "proto.hpp"
 #include <utils/common.hpp>
@@ -48,7 +49,7 @@ inline uint16_t calculate_icmp_checksum(const void *data, int length) {
   
   
   // 计算 IPv4 头部校验和（支持奇数长度）
-  uint16_t calculate_ip_checksum(const uint8_t* header, size_t len) {
+  uint16_t calculate_checksum(const uint8_t* header, size_t len) {
     uint32_t sum = 0;
     uint16_t* ptr = (uint16_t*)header;
   
@@ -102,9 +103,9 @@ namespace gtp
 
     #define IP_HEADER_LEN 20
 
-GtpTask::GtpTask(TaskBase *base)
-    : m_base{base}, m_udpServer{}, m_ueContexts{},
-    m_rateLimiter(std::make_unique<RateLimiter>()), m_pduSessions{}, m_sessionTree{}
+GtpTask::GtpTask(TaskBase *base, GtpProxy *proxy)
+    : m_base{base}, m_gtpproxy{proxy}, m_udpServer{}, m_ueContexts{},
+    m_rateLimiter(std::make_unique<RateLimiter>()), m_pduSessions{}, m_sessionTree{}, m_last_packet(nullptr)
 {
     m_logger = m_base->logBase->makeUniqueLogger("gtp");
 }
@@ -156,6 +157,10 @@ void GtpTask::onLoop()
             }
             case NmGnbNgapToGtp::SESSION_RELEASE: {
                 handleSessionRelease(w->ueId, w->psi);
+                break;
+            }
+            case NmGnbNgapToGtp::DATA_PDU_DELIVERY: {
+                handleUplinkData(w->ueId, w->psi, std::move(w->data));
                 break;
             }
             }
@@ -256,11 +261,9 @@ void GtpTask::handleUeContextDelete(int ueId)
 
 void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
 {
-    const uint8_t *data = pdu.data();
+    //uint8_t *data = pdu.data();
 
-    // ignore non IPv4 packets
-    if ((data[0] >> 4 & 0xF) != 4)
-        return;
+    m_logger->err("Uplink data failure, PDU session not found.111  UE[%d] PSI[%d] gtp[%d]", ueId, psi, pdu.length());
 
     uint64_t sessionInd = MakeSessionResInd(ueId, psi);
 
@@ -272,7 +275,8 @@ void GtpTask::handleUplinkData(int ueId, int psi, OctetString &&pdu)
 
     auto &pduSession = m_pduSessions[sessionInd];
 
-    if (m_rateLimiter->allowUplinkPacket(sessionInd, static_cast<int64_t>(pdu.length())))
+    m_logger->err("Uplink data failure, PDU session not found. UE[%d] PSI[%d] gtp[%d]", ueId, psi, pdu.length());
+  //  if (m_rateLimiter->allowUplinkPacket(sessionInd, static_cast<int64_t>(pdu.length())))
     {
         gtp::GtpMessage gtp{};
         gtp.payload = std::move(pdu);
@@ -323,12 +327,64 @@ void GtpTask::handleUdpReceive(const udp::NwUdpServerReceive &msg)
 
     uint8_t proto = gtp->payload.data()[9];
     uint8_t icmp_type = gtp->payload.data()[20];
-    printf(" proto %d icmp_type %d\n", proto, icmp_type);
+
     if (proto == 0x01 && icmp_type == 0x08) // icmp request
     {
         OctetString icmp_req = std::move(gtp->payload);
 
         handle_icmp_request(sessionInd, icmp_req);
+    }
+    else
+    {
+        uint16_t fragment = gtp->payload.data()[6];
+        fragment = fragment << 8;
+        fragment = fragment + gtp->payload.data()[7];
+        uint8_t rtp = gtp->payload.data()[28];
+        auto ueid = GetUeId(sessionInd);
+        if (proto == 0x11 && rtp != 0x80)
+        {
+            if (fragment == 0 || fragment == 0x4000)
+            {
+                if (m_gtpproxy) 
+                {
+                    m_gtpproxy->addGtpPayload(ueid, gtp->payload);
+                }
+
+            }
+            else
+            {
+                printf(" 1111 ueid=%d %x %x %x\n", ueid, gtp->payload.data()[6], gtp->payload.data()[7], fragment);
+                if (m_last_packet != nullptr) 
+                {
+                    if (fragment == 0x2000)
+                    {
+                        gtp->payload.append(m_last_packet->subCopy(20));
+
+                        m_gtpproxy->addGtpPayload(ueid, gtp->payload);
+
+                        delete m_last_packet;
+                        m_last_packet = nullptr;
+                    }
+                    else
+                    {
+                        m_last_packet->append(gtp->payload.subCopy(20));
+
+                        m_gtpproxy->addGtpPayload(ueid, *m_last_packet);
+
+                        delete m_last_packet;
+                        m_last_packet = nullptr;
+                    }
+                }
+                else 
+                {
+                    m_last_packet = new OctetString(std::move(gtp->payload));
+                }
+            }
+        }
+        else if (proto == 0x6)
+        {
+            m_gtpproxy->addGtpPayload(ueid, gtp->payload);
+        }
     }
 
     delete gtp;
@@ -356,7 +412,7 @@ void GtpTask::handle_icmp_request(uint64_t sessionInd, OctetString &icmp_req)
     ip_header->src_addr = ip_header->dst_addr;
     ip_header->dst_addr = addr;
     ip_header->checksum = 0;
-    ip_header->checksum = calculate_ip_checksum((uint8_t *)icmp_response.data(), icmp_response.length());
+    ip_header->checksum = calculate_checksum((uint8_t *)icmp_response.data(), icmp_response.length());
     ip_header->checksum = htons(ip_header->checksum);
     auto &pduSession = m_pduSessions[sessionInd];
     gtp::GtpMessage gtp{};
